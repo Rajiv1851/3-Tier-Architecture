@@ -2,26 +2,26 @@
 ### Manual DataBase  Server + Relational DataBase + Application Load Balancer+ Auto Scaling
 ### This project deploys a Java-based 3-tier web application on AWS, featuring a secure and scalable setup using NGINX (Jump Server), php (App Server), and MySQL (RDS). It includes Auto Scaling, Application Load Balancer (ALB), and custom VPC networking to ensure high availability, performance, and secure inter-tier communication
 
----
-![](assets/Screenshot 2025-09-15 055908.png)
+--- <img width="1243" height="826" alt="Screenshot 2025-09-15 055908" src="https://github.com/user-attachments/assets/2106f037-1ed2-45f3-b7ff-75841cbc0663" />
+055908.png)
 
 ##  Project Overview
 
 This project deploys a Java-based 3-tier web application on AWS with:
 
 - **Presentation Layer** → NGINX on Jump Server (Public Subnet)
-- **Application Layer** → Tomcat (WAR deployed in EC2 Auto Scaling Group)
+- **Application Layer** → php ( EC2 Auto Scaling Group)
 - **Data Layer** → Manual DB Server EC2 (MariaDB client) connects to RDS (MySQL)
 
 ---
 
 ##  Architecture Summary
 
-| Layer         | Component                                   | Subnet            |
+| Layer         | Component                                    | Subnet            |
 |---------------|----------------------------------------------|-------------------|
-| Presentation  | Jump Server (NGINX)                         | Public Subnet     |
-| Application   | Tomcat EC2 in Auto Scaling Group            | Private Subnet 1  |
-| Data          | DB EC2 + RDS (MySQL)                        | Private Subnet 2  |
+| Presentation  | Jump Server (NGINX)                          | Public Subnet     |
+| Application   |  EC2 in Auto Scaling Group                   | Private Subnet 1  |
+| Data          | DB EC2 + RDS (MySQL)                         | Private Subnet 2  |
 
 ---
 
@@ -30,7 +30,7 @@ This project deploys a Java-based 3-tier web application on AWS with:
 | Name      | Inbound Rules               | Source               |
 |-----------|-----------------------------|----------------------|
 | Jump SG   | TCP 22 (SSH), 80 (HTTP)     | Your IP              |
-| App SG    | TCP 8080                    | ALB SG               |
+| App SG    | TCP 80                      | ALB SG               |
 | ALB SG    | TCP 80                      | 0.0.0.0/0            |
 | DB SG     | TCP 3306 (MySQL)            | App SG               |
 
@@ -43,7 +43,8 @@ This project deploys a Java-based 3-tier web application on AWS with:
    - Public Subnet: `10.0.0.0/20`
    - Private Subnet 1 (App): `10.0.16.0/20`
    - Private Subnet 2 (DB): `10.0.32.0/20`
-   ![](./img/sc2.png)
+   <img width="1545" height="714" alt="Screenshot 2025-09-15 051627" src="https://github.com/user-attachments/assets/c57b5913-cab0-4148-99e5-702831750f14" />
+
 3. **Internet Gateway**: Attach to VPC
 4. **NAT Gateway**: Create in Public Subnet (use Elastic IP)
 5. **Route Tables**:
@@ -55,15 +56,17 @@ This project deploys a Java-based 3-tier web application on AWS with:
 ##  RDS Setup (MySQL)
 
 1. Go to **RDS > Create Database**
-![](./img/sc4.png)
+<img width="1553" height="248" alt="Screenshot 2025-09-15 051550" src="https://github.com/user-attachments/assets/d7b50ed8-c2f3-46b1-a9e0-37382d01f43e" />
+
 2. Choose **MySQL**
-3. DB Name: `studentapp`
-4. Username: `admin`, Password: `redhat123!`
+3. DB Name: `Nakhawa`
+4. Username: `root`, Password: `rajivnakhawa`
 5. Subnet Group: Private Subnet 2
 6. Attach **DB SG**
 
 Save the ***RDS Endpoint***.
-![](./img/Screenshot%202025-07-04%20153339.png)
+<img width="1919" height="776" alt="Screenshot 2025-07-04 153339" src="https://github.com/user-attachments/assets/d76b40e2-01cc-445b-92b2-ed496469aa95" />
+
 
 ---
 
@@ -88,38 +91,21 @@ sudo mysql -h <RDS-ENDPOINT> -u admin -p
 ```
 Inside MySQL:
 ```
-CREATE DATABASE studentapp;
-USE studentapp;
+CREATE DATABASE Nakhawa;
+USE Nakhawa;
 
-CREATE TABLE students (
-    student_id INT AUTO_INCREMENT PRIMARY KEY,
-    student_name VARCHAR(100),
-    student_addr VARCHAR(100),
-    student_age VARCHAR(3),
-    student_qual VARCHAR(20),
-    student_percent VARCHAR(10),
-    student_year_passed VARCHAR(10)
+CREATE TABLE users(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    password VARCHAR(10),
 );
 ```
-![](./img/sc7.png)
-![](./img/sc8.png)
-![](./img/sc9.png)
+<img width="1011" height="300" alt="Screenshot 2025-09-15 052005" src="https://github.com/user-attachments/assets/026e79e6-fca4-4928-b433-0a30cf3eaeaa" />
+
 ## **Launch Template (App EC2)**
 1.Go to EC2 > Launch Templates > Create
 Use this User Data:
 ```
-#!/bin/bash
-yum update -y
-yum install java -y
-cd /home/ec2-user
-curl -O https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz
-tar -xvf apache-tomcat-9.0.98.tar.gz
-mv apache-tomcat-9.0.98 /opt/tomcat
-curl -O https://s3-us-west-2.amazonaws.com/studentapi-cit/student.war
-curl -O https://s3-us-west-2.amazonaws.com/studentapi-cit/mysql-connector.jar
-cp student.war /usr/local/tomcat/webapps/
-cp mysql-connector.jar /opt/tomcat/lib/
-/opt/tomcat/bin/startup.sh
 ```
 ## ***Target Group + ALB***
 **1. Create Target Group :**
@@ -128,7 +114,7 @@ cp mysql-connector.jar /opt/tomcat/lib/
 
 - Protocol: HTTP
 
-- Port: 8080
+- Port: 80
 
 - Health Check Path: /
 
@@ -159,7 +145,7 @@ cp mysql-connector.jar /opt/tomcat/lib/
 
               * Max: 4
 
-              *  Target CPU > 50%
+              *  Target CPU > 20%
 
  ## Jump Server Setup (Public)
  1. Launch EC2 in Public Subnet
@@ -176,9 +162,10 @@ ssh -i key.pem ec2-user@<Jump-Public-IP>
 #### bash
 ```
    sudo yum install nginx -y
-   sudo vim /etc/nginx/nginx.conf
+   sudo nano /etc/nginx/nginx.conf
 ```
-![](./img/sc5.png)
+<img width="1889" height="86" alt="sc5" src="https://github.com/user-attachments/assets/61693883-afce-4911-9d97-1d73b25e2f5f" />
+
 
 5. In location / block:
 #### bash
@@ -187,7 +174,8 @@ location / {
     proxy_pass http://<ALB-DNS-Name>
 }
 ```
-![](./img/sc6.png)
+<img width="1650" height="866" alt="image" src="https://github.com/user-attachments/assets/fde24bab-0ef4-46b9-bba4-01a322515bb6" />
+
 6. Save and restart NGINX:
 #### bash
 ```
@@ -199,35 +187,24 @@ On your application EC2 instances:
 1. Edit context file:
 #### bash
 ```
-sudo vim /opt/tomcat9/conf/context.xml
+s
 ```
 
 2.Add inside <Context>:
-#### bash
-```
-<Resource name="jdbc/TestDB" auth="Container"
-          type="javax.sql.DataSource"
-          maxTotal="500" maxIdle="30" maxWaitMillis="1000"
-          username="admin" password="redhat123!"
-          driverClassName="com.mysql.jdbc.Driver"
-          url="jdbc:mysql://<RDS-ENDPOINT>:3306/studentapp?useUnicode=yes&characterEncoding=utf8"/>
-```
-3. Save and restart Tomcat:
-#### bash
-```
-cd /opt/tomcat9/bin
-./catelina.sh stop
-./catelina.sh start
-```
+
+3. Save and restart php-fpm:
+
  ### Test the Application
  1. Open a web browser and navigate to the ALB DNS name.
  2. You should see the Tomcat application running on the ALB DNS name.
 
  ### OUTPUT
- ![](./img/sc10.png)
- ![](./img/sc11.png)
- ![](./img/sc12.png)
- ![](./img/sc13.png)
+ <img width="683" height="526" alt="Screenshot 2025-09-15 051810" src="https://github.com/user-attachments/assets/56affa8e-d9f3-458b-949c-de3b82e24b20" />
+<img width="980" height="102" alt="Screenshot 2025-09-15 051947" src="https://github.com/user-attachments/assets/43d1154e-5ae5-4fe4-9cf0-bc6a1b10499c" />
+
+
+ <img width="1011" height="300" alt="Screenshot 2025-09-15 052005" src="https://github.com/user-attachments/assets/58f4a954-2b0f-4d7e-bfd9-46295d09c889" />
+
  
  ## Summary
- This project demonstrates the deployment of a 3-tier Java web application on AWS using EC2, RDS, ALB, and Auto Scaling. The architecture includes an NGINX Jump Server (public subnet) as the entry point, a Tomcat-based application layer (private subnet) managed by an Auto Scaling Group behind an ALB, and a MySQL RDS database (private subnet) accessed via a MariaDB client on an EC2 instance. The setup ensures high availability, scalability, and secure communication across layers using VPC networking, NAT, and strict Security Groups.
+ **This project demonstrates a 3-Tier Architecture implementation using a public Web Tier, a private Application Tier built with PHP, and a private Database Tier powered by MySQL. The Web Tier provides a simple HTML and JavaScript interface where users can interact with the system. When a user performs an action, the request is sent to the Application Tier, which acts as the middleware and contains the business logic. The PHP backend processes the request, connects to the MySQL Database Tier, retrieves or modifies data, and returns the results as a JSON response. The Database Tier is kept private for security, ensuring it can only be accessed through the Application Tier. This separation of concerns enhances security, scalability, and maintainability, allowing each tier to be managed and scaled independently. The project provides a clear example of how enterprise applications are typically structured to handle user interaction, business logic, and data storage in a modular and secure way.**
