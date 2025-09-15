@@ -3,7 +3,7 @@
 ### This project deploys a Java-based 3-tier web application on AWS, featuring a secure and scalable setup using NGINX (Jump Server), php (App Server), and MySQL (RDS). It includes Auto Scaling, Application Load Balancer (ALB), and custom VPC networking to ensure high availability, performance, and secure inter-tier communication
 
 ---
-![](./img/sc1.png)
+![](055908)
 
 ##  Project Overview
 
