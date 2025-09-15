@@ -2,8 +2,8 @@
 ### Manual DataBase  Server + Relational DataBase + Application Load Balancer+ Auto Scaling
 ### This project deploys a Java-based 3-tier web application on AWS, featuring a secure and scalable setup using NGINX (Jump Server), php (App Server), and MySQL (RDS). It includes Auto Scaling, Application Load Balancer (ALB), and custom VPC networking to ensure high availability, performance, and secure inter-tier communication
 
---- <img width="1243" height="826" alt="Screenshot 2025-09-15 055908" src="https://github.com/user-attachments/assets/2106f037-1ed2-45f3-b7ff-75841cbc0663" />
-055908.png)
+--- <img width="1024" height="1024" alt="VPC Architecture with Multi-AZ Setup" src="https://github.com/user-attachments/assets/693f975a-f3e8-4d8a-ae7a-5d40b58ab542" />
+
 
 ##  Project Overview
 
